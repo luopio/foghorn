@@ -46,3 +46,7 @@ mix run --no-halt  # or "iex -S mix" for the repl experience
 # open browser and go to localhost:5555, add a table to listen to
 # change that table in the database and magic happens
 ```
+
+
+
+License: MIT
