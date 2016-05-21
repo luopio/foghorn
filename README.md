@@ -29,8 +29,11 @@ Only Postgres for now (via NOTIFY).
 
 - Docker deployment
 - CORS support
+- Proper supervision tree
+- Limit tables that notifications can be placed on
+- Multiple simultaneous databases -support
 - Publish to Hex
-- Other databases? (PR welcome)
+- Other databases? (PRs welcome)
 
 
 ## Installation
