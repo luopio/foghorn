@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Foghorn status</title>
+</head>
+<body>
+
+  <h1>Foghorn</h1>
+
+  <p>Listen for changes on a table</p>
+
+  <label>
+    Table name
+    <input type="text" id="table-name" value="users" />
+  </label>
+
+  <button id="start-follow">Go</button>
+
+  <pre id="notifications">
+  </pre>
+
+  <script src="/assets/Foghorn.js" type="text/javascript"></script>
+
+  <script type="text/javascript">
+    log('start listening now!');
+
+    Foghorn.listen(
+        'users',
+        function(tablename, type, id) {
+          console.log('notified on USERS', tablename, 'for the id', id, 'of type', type);
+        });
+
+    Foghorn.listen(
+        'pets',
+        function(tablename, type, id) {
+          console.log('notified on PETS', tablename, 'for the id', id, 'of type', type);
+        });
+
+
+    function notifyCallback(tablename, type, id) {
+      console.log('we are being notified of change on', tablename, 'for the id', id, 'of type', type);
+      document.getElementById('notifications').innerText +=
+          "\n" + 'noticed ' + type + ' on ' + tablename + ' for id ' + id;
+    }
+
+    document.getElementById('start-follow').onclick = function() {
+      var tb = document.getElementById('table-name').value;
+      Foghorn.listen(tb, notifyCallback);
+    };
+
+  </script>
+
+</body>
+</html>
