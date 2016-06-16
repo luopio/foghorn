@@ -28,7 +28,6 @@ Only Postgres for now (via NOTIFY).
 ## Things to do
 
 - Docker deployment
-- CORS support
 - Proper supervision tree
 - Limit tables that notifications can be placed on
 - Multiple simultaneous databases -support
@@ -50,6 +49,28 @@ mix run --no-halt  # or "iex -S mix" for the repl experience
 # change that table in the database and magic happens
 ```
 
+## How to build the Docker container
 
+On Mac OS X you'll need a separate image for building linux-compatible Elixir releases. On linux you can just run `compile_release.sh`.
+
+Use the build-image to build an image that you can use for one-off compilations (cross-compile). Only needed on Mac. Only needed once.
+```
+docker build -t elixir-builder -f Dockerfile.build .
+```
+
+Build the release within the docker container
+```
+docker run -ti --rm -v $(pwd):/build elixir-builder /build/compile_release.sh
+```
+
+Build the final container that contains your new release which you can then run independently
+```
+docker build -t foghorn .
+```
+
+Test it: 
+```
+docker run -ti --rm foghorn:latest foreground
+```
 
 License: MIT

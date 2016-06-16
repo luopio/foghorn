@@ -45,6 +45,10 @@ defmodule Foghorn do
 
   ## < Interface functions
 
+  def main(x) do
+    init(x)
+  end
+
   def init(_) do
     IO.puts "Foghorn innnit"
     {:ok, _} = Notifications.start_link(%{pg_conf: @pg_conf, channel: @channel}, [name: :notifications])
