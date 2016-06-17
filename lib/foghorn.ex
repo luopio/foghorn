@@ -2,12 +2,12 @@ defmodule Foghorn do
 
   use GenServer
 
-  @pg_conf [
-     hostname: "192.168.99.100",
-     port: 5432,
-     username: "postgres",
-     password: "postboy",
-     database: "postgres" ]
+#  @pg_conf [
+#     hostname: "192.168.99.100",
+#     port: 5432,
+#     username: "postgres",
+#     password: "postboy",
+#     database: "postgres" ]
 
   @channel "table_change"
 
@@ -51,8 +51,10 @@ defmodule Foghorn do
 
   def init(_) do
     IO.puts "Foghorn innnit"
-    {:ok, _} = Notifications.start_link(%{pg_conf: @pg_conf, channel: @channel}, [name: :notifications])
-    {:ok, _} = Triggers.start_link(%{pg_conf: @pg_conf}, [name: :triggers])
+    pg_conf = read_pg_conf_from_env
+    IO.inspect pg_conf
+    {:ok, _} = Notifications.start_link(%{pg_conf: pg_conf, channel: @channel}, [name: :notifications])
+    {:ok, _} = Triggers.start_link(%{pg_conf: pg_conf}, [name: :triggers])
     {:ok, _} = Clients.start_link(%{}, [])
     {:ok, _} = HTTPServer.start()
     {:ok, {}}
@@ -68,5 +70,23 @@ defmodule Foghorn do
     end
     {:noreply, state}
   end
+
+  defp read_pg_conf_from_env do
+    regex = ~r/(?<db_type>\w+):\/\/(?<username>.+):(?<password>.+)@(?<host>[\w.]+)(:(?<port>.*))?\/(?<database>.+)/iu
+    db_url = System.get_env("FOGHORN_DB")
+    IO.puts ".. reading configuration from url: #{db_url}"
+    if db_url == nil || String.length(db_url) == 0 do
+      raise "Please define the environment variable FOGHORN_DB to point out the database to use. E.g. FOGHORN_DB=postgres://user:pass@host:port/database foghorn"
+    end
+    captures = Regex.named_captures(regex, db_url)
+    [
+       hostname: captures["host"],
+       port: (if String.strip(captures["port"]) == "", do: 5432, else: Integer.parse(captures["port"])),
+       username: captures["username"],
+       password: captures["password"],
+       database: captures["database"]
+     ]
+  end
+
 
 end

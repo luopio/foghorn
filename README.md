@@ -27,7 +27,7 @@ Only Postgres for now (via NOTIFY).
 
 ## Things to do
 
-- Docker deployment
+- Sort out how to set ws:// -connection string in client dynamically
 - Proper supervision tree
 - Limit tables that notifications can be placed on
 - Multiple simultaneous databases -support
@@ -36,6 +36,16 @@ Only Postgres for now (via NOTIFY).
 
 
 ## Installation
+
+### Run with directly
+```
+FOGHORN_DB="postgres://postgres:postboy@192.168.99.100/postgres" mix run --no-halt
+```
+
+### Run with docker
+```
+docker run -ti -e "FOGHORN_DB=postgres://user:name@192.168.99.100/database" -p 5555:5555 --rm foghorn:latest foreground
+```
 
 Very alpha stuff:
 
