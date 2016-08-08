@@ -18,13 +18,36 @@ defmodule Websockets do
     :ok
   end
 
-  def websocket_handle({:text, tablename}, req, state) do
+  #
+  # Incoming messages are handled here
+  #
+  def websocket_handle({:text, command}, req, state) do
     IO.puts ">> websocket handling"
-    IO.inspect tablename
-#    IO.inspect req
-#    IO.inspect state
-    Foghorn.listen(self, [tablename])
-    {:reply, {:text, Poison.encode!(%{status: "ok", table: tablename, op: "LISTEN"})}, req, state}
+    IO.inspect command
+    payload = Poison.decode!(command)
+    IO.inspect payload
+    # IO.inspect req
+    # IO.inspect state
+    ret_val = case payload do
+        %{"op" => "STOP"} ->
+          IO.puts "op stop!"
+          Foghorn.stop_listening_for(self)
+          %{status: "ok", table: "ALL", op: "STOP"}
+
+        %{"op" => "UNLISTEN", "client_id" => remove_client_id} ->
+          IO.puts "op unlisten"
+          client_id = Foghorn.unlisten(self, remove_client_id)
+          %{status: "ok", op: "UNLISTEN", client_id: client_id}
+
+        %{"op" => "LISTEN", "request_id" => request_id, "table" => table} ->
+          client_id = Foghorn.listen(self, [table])
+          %{status: "ok", table: table, op: "LISTEN", client_id: client_id, request_id: request_id}
+
+        _ ->
+          IO.warn "Unknown fancy command: ", payload
+          ret_val = %{status: "error", msg: "Unknown fancy command: " <> payload}
+      end
+    {:reply, {:text, Poison.encode!(ret_val)}, req, state}
   end
 
   def websocket_handle(_data, req, state) do

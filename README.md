@@ -4,7 +4,7 @@ Watches your database for changes and notifies listening clients through websock
 
 I.e. you do this in your client javascript:
 ```html
-<script src="/assets/Foghorn.js" type="text/javascript"></script>
+<script src="/assets/Foghorn.es6" type="text/javascript"></script>
 <script type="text/javascript">
   // Listen for changes on database table users, call console.log on changes
   Foghorn.listen(
@@ -44,7 +44,7 @@ FOGHORN_DB="postgres://postgres:postboy@192.168.99.100/postgres" mix run --no-ha
 
 ### Run with docker
 ```
-docker run -ti -e "FOGHORN_DB=postgres://user:name@192.168.99.100/database" -p 5555:5555 --rm foghorn:latest foreground
+docker run -ti -e "FOGHORN_DB=postgres://user:password@192.168.99.100/database" -p 5555:5555 --rm foghorn:latest foreground
 ```
 
 Very alpha stuff:

@@ -26,8 +26,17 @@ defmodule Foghorn do
     Clients.add_client(listener, tables)
   end
 
-  def stop_listening_for(listener) do
-    Clients.remove_client(listener)
+  def unlisten(pid, client_id) do
+    Clients.remove_client(pid, client_id)
+    empty_tables = Clients.empty_tables
+    Enum.each empty_tables, fn table -> remove_trigger(table) end
+    client_id
+  end
+
+  def stop_listening_for(pid) do
+    Clients.remove_clients_with_pid(pid)
+    empty_tables = Clients.empty_tables
+    Enum.each empty_tables, fn table -> remove_trigger(table) end
   end
 
   def add_trigger(table) do
@@ -81,7 +90,7 @@ defmodule Foghorn do
     captures = Regex.named_captures(regex, db_url)
     [
        hostname: captures["host"],
-       port: (if String.strip(captures["port"]) == "", do: 5432, else: Integer.parse(captures["port"])),
+       port: (if String.strip(captures["port"]) == "", do: 5432, else: elem(Integer.parse(captures["port"]), 0)),
        username: captures["username"],
        password: captures["password"],
        database: captures["database"]

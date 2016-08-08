@@ -41,12 +41,12 @@ defmodule Triggers do
       CREATE TRIGGER notify_table_changed_trigger AFTER INSERT OR UPDATE OR DELETE ON #{table}
       FOR EACH ROW EXECUTE PROCEDURE notify_change_trigger();
     """
-    IO.puts "ADD TRIGGER: #{query}"
+    # IO.puts "ADD TRIGGER: #{query}"
     case Postgrex.query(pg_connection, query, []) do
       {:ok, _} -> IO.puts "created trigger"
       {:error, reason} ->
-        IO.puts "could not create trigger:"
-        IO.inspect reason
+        # IO.puts "could not create trigger:"
+        # IO.inspect reason
     end
   end
 
