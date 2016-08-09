@@ -18,8 +18,8 @@ I.e. you do this in your client javascript:
     });
 ```
 
-If you want to gracefully stop listening later on you can store the listener ID given to you
-through listen and close the connection:
+If you want to gracefully stop listening later on you can store the listener ID,
+which is given to you through `listen()` and close the connection:
 ```js
 var myListenerId = null;
 Foghorn.listen(
@@ -40,9 +40,9 @@ Postgres (via NOTIFY).
 ## Things to do
 - Proper supervision tree
 - Authentication scheme (via shared table in database?)
+- Publish to Hex
 - Limit tables that notifications can be placed on
 - Multiple simultaneous databases -support
-- Publish to Hex
 - Other databases? (PRs welcome)
 
 
@@ -61,7 +61,7 @@ FOGHORN_DB="postgres://user:password@192.168.99.100:5432/database" mix run --no-
 No local [Elixir](http://elixir-lang.org/) installation required, but you will need [Docker](https://www.docker.com/products/overview).
 
 ```
-docker run -ti -e "FOGHORN_DB=postgres://user:password@192.168.99.100:5432/database" -p 5555:5555 --rm foghorn:latest foreground
+docker run -ti -e "FOGHORN_DB=postgres://user:password@192.168.99.100:5432/database" -p 5555:5555 --rm luopio/foghorn:latest foreground
 ```
 
 ### Quick instructions on setting up Elixir (if needed)
@@ -79,7 +79,7 @@ mix run --no-halt  # or "iex -S mix" for the repl experience
 ## Compiling the Javascript code
 
 The JS code is ES6 standard, thus it needs to be compiled to work on older browsers.
-A precompiled file is available under /priv/assets/. Compilation requires Babel:
+A precompiled file is available under (/priv/assets)[/priv/assets/]. Compilation requires Babel:
 
 ```
 npm install
@@ -103,12 +103,10 @@ docker run -ti --rm -v $(pwd):/build elixir-builder /build/compile_release.sh
 
 Build the final container that contains your new release which you can then run independently
 ```
-docker build -t foghorn .
+docker build -t my_fancy_foghorn .
 ```
 
-Test it: 
-```
-docker run -ti --rm foghorn:latest foreground
-```
+
+
 
 License: MIT
