@@ -3,6 +3,7 @@
 /deps
 erl_crash.dump
 *.ez
-
+/node_modules
+/rel
 /.idea
 /*.iml
