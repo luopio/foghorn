@@ -56,12 +56,12 @@ var Foghorn = (function() {
     log('notify called with', payload);
     if(payload.op == 'LISTEN') {
       const newListeners = listeners.map((listener) => {
-          if(listener.request_id == payload.request_id) {
-        listener.connected_callback && listener.connected_callback.call(this, payload.client_id);
-        return Object.assign(listener, {client_id: payload.client_id});
-      }
-      return listener;
-    });
+        if(listener.request_id == payload.request_id) {
+          listener.connected_callback && listener.connected_callback.call(this, payload.client_id);
+          return Object.assign(listener, {client_id: payload.client_id});
+        }
+        return listener;
+      });
       listeners = newListeners;
     } else {
       listeners.forEach(function(listener) {

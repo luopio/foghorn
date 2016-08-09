@@ -3,32 +3,43 @@
 Watches your database for changes and notifies listening clients through websockets.
 
 I.e. you do this in your client javascript:
-```html
-<script src="/assets/Foghorn.es6" type="text/javascript"></script>
-<script type="text/javascript">
-  // Listen for changes on database table users, call console.log on changes
+```js
+  // Set the address to your running foghorn server. As we are on websockets,
+  // no funky cross-domain settings are required.
+  Foghorn.ADDRESS = 'ws://localhost:5555/ws';
+
+  // Foghorn.listen(tableName:string,
+  //                notifyCallback:function(tablename, operation, id),
+  //                (optional)connectedCallback:function(listenerId))
   Foghorn.listen(
     'users',
-    function(tablename, type, id) {
-      console.log('notified on', tablename, 'of a', type, 'for the id', id);
+    function(tablename, operation, id) {
+      console.log('notified on', tablename, 'of a', operation, 'for the id:', id);
     });
 ```
 
-And when the table changes the Foghorn server will tell your javascript what happened to which ID. Go update your view,
-re-render your React, play the gong or what ever it is that you do when data changes.
+If you want to gracefully stop listening later on you can store the listener ID given to you
+through listen and close the connection:
+```js
+var myListenerId = null;
+Foghorn.listen(
+    'users',
+    function notifyCallback(tablename, operation, id) { ; }
+    function connectedCallback(listenerId) {
+      myListenerId = listenerId;
+    });
 
-## State
-
-MVP/alpha(very)
+// then later in your code you call
+myListenerId != null && Foghorn.unlisten(myListenerId);
+```
 
 ## Supported databases
 
-Only Postgres for now (via NOTIFY).
+Postgres (via NOTIFY).
 
 ## Things to do
-
-- Sort out how to set ws:// -connection string in client dynamically
 - Proper supervision tree
+- Authentication scheme (via shared table in database?)
 - Limit tables that notifications can be placed on
 - Multiple simultaneous databases -support
 - Publish to Hex
@@ -37,17 +48,23 @@ Only Postgres for now (via NOTIFY).
 
 ## Installation
 
-### Run with directly
+### Run directly with Elixir
+
+This requires a local [Elixir](http://elixir-lang.org/) installation.
+
 ```
-FOGHORN_DB="postgres://postgres:postboy@192.168.99.100/postgres" mix run --no-halt
+FOGHORN_DB="postgres://user:password@192.168.99.100:5432/database" mix run --no-halt
 ```
 
 ### Run with docker
+
+No local [Elixir](http://elixir-lang.org/) installation required, but you will need [Docker](https://www.docker.com/products/overview).
+
 ```
-docker run -ti -e "FOGHORN_DB=postgres://user:password@192.168.99.100/database" -p 5555:5555 --rm foghorn:latest foreground
+docker run -ti -e "FOGHORN_DB=postgres://user:password@192.168.99.100:5432/database" -p 5555:5555 --rm foghorn:latest foreground
 ```
 
-Very alpha stuff:
+### Quick instructions on setting up Elixir (if needed)
 
 ```
 brew install elixir
@@ -58,6 +75,17 @@ mix run --no-halt  # or "iex -S mix" for the repl experience
 # open browser and go to localhost:5555, add a table to listen to
 # change that table in the database and magic happens
 ```
+
+## Compiling the Javascript code
+
+The JS code is ES6 standard, thus it needs to be compiled to work on older browsers.
+A precompiled file is available under /priv/assets/. Compilation requires Babel:
+
+```
+npm install
+./compile_javascript.sh
+```
+
 
 ## How to build the Docker container
 
