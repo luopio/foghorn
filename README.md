@@ -79,7 +79,7 @@ mix run --no-halt  # or "iex -S mix" for the repl experience
 ## Compiling the Javascript code
 
 The JS code is ES6 standard, thus it needs to be compiled to work on older browsers.
-A precompiled file is available under (/priv/assets)[/priv/assets/]. Compilation requires Babel:
+A precompiled file is available under [/priv/assets](./priv/assets/). Compilation requires Babel:
 
 ```
 npm install
