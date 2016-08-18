@@ -5,4 +5,6 @@ RUN apk --update add ncurses-libs && rm -rf /var/cache/apk/*
 
 COPY rel /rel
 
+EXPOSE 5555
+
 ENTRYPOINT ["rel/foghorn/bin/foghorn"]

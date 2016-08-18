@@ -2,7 +2,7 @@
 
 Watches your database for changes and notifies listening clients through websockets.
 
-I.e. you do this in your client javascript:
+I.e. you start a Foghorn server and connect to it in your client javascript:
 ```js
   // Set the address to your running foghorn server. As we are on websockets,
   // no funky cross-domain settings are required.
@@ -37,16 +37,18 @@ myListenerId != null && Foghorn.unlisten(myListenerId);
 
 Postgres (via NOTIFY).
 
-## Things to do
-- Proper supervision tree
-- Authentication scheme (via shared table in database?)
-- Publish to Hex
-- Limit tables that notifications can be placed on
-- Multiple simultaneous databases -support
-- Other databases? (PRs welcome)
-
-
 ## Installation
+
+### Run with docker
+
+The easiest option. No local [Elixir](http://elixir-lang.org/) installation required, but you will need [Docker](https://www.docker.com/products/overview).
+
+```
+docker run -ti -e "FOGHORN_DB=postgres://user:password@192.168.99.100:5432/database" -p 5555:5555 --rm luopio/foghorn:latest foreground
+```
+
+You can also not define `FOGHORN_DB` and use the separate variables `FOGHORN_DB_USER`, `FOGHORN_DB_PASS`, `FOGHORN_DB_HOST`,
+`FOGHORN_DB_PORT` and `FOGHORN_DB_NAME`.
 
 ### Run directly with Elixir
 
@@ -56,13 +58,10 @@ This requires a local [Elixir](http://elixir-lang.org/) installation.
 FOGHORN_DB="postgres://user:password@192.168.99.100:5432/database" mix run --no-halt
 ```
 
-### Run with docker
+## Test it
 
-No local [Elixir](http://elixir-lang.org/) installation required, but you will need [Docker](https://www.docker.com/products/overview).
-
-```
-docker run -ti -e "FOGHORN_DB=postgres://user:password@192.168.99.100:5432/database" -p 5555:5555 --rm luopio/foghorn:latest foreground
-```
+Open up a browser on [localhost:5555](localhost:5555). If you used Docker and/or Docker-machine
+the host might be different.
 
 ### Quick instructions on setting up Elixir (if needed)
 
@@ -107,6 +106,14 @@ docker build -t my_fancy_foghorn .
 ```
 
 
+## Things to do
+- Proper supervision tree
+- Disable testing UI on production
+- Authentication scheme (via shared table in database?)
+- Publish to Hex
+- Limit tables that notifications can be placed on
+- Multiple simultaneous databases -support
+- Other databases? (PRs welcome)
 
 
 License: MIT

@@ -83,18 +83,29 @@ defmodule Foghorn do
   defp read_pg_conf_from_env do
     regex = ~r/(?<db_type>\w+):\/\/(?<username>.+):(?<password>.+)@(?<host>[\w.]+)(:(?<port>.*))?\/(?<database>.+)/iu
     db_url = System.get_env("FOGHORN_DB")
-    IO.puts ".. reading configuration from url: #{db_url}"
-    if db_url == nil || String.length(db_url) == 0 do
-      raise "Please define the environment variable FOGHORN_DB to point out the database to use. E.g. FOGHORN_DB=postgres://user:pass@host:port/database foghorn"
+    if db_url do
+      IO.puts ".. reading configuration from url: #{db_url}"
+      if db_url == nil || String.length(db_url) == 0 do
+        raise "Please define the environment variable FOGHORN_DB to point out the database to use. E.g. FOGHORN_DB=postgres://user:pass@host:port/database foghorn"
+      end
+      captures = Regex.named_captures(regex, db_url)
+      [
+         hostname: captures["host"],
+         port: (if String.strip(captures["port"]) == "", do: 5432, else: elem(Integer.parse(captures["port"]), 0)),
+         username: captures["username"],
+         password: captures["password"],
+         database: captures["database"]
+      ]
+    else
+      IO.puts ".. reading configuration from separate variables"
+      [
+         hostname: System.get_env("FOGHORN_DB_HOST") || "localhost",
+         port: elem(Integer.parse(System.get_env("FOGHORN_DB_PORT")), 0) || 5432,
+         username: System.get_env("FOGHORN_DB_USER"),
+         password: System.get_env("FOGHORN_DB_PASS"),
+         database: System.get_env("FOGHORN_DB_NAME")
+      ]
     end
-    captures = Regex.named_captures(regex, db_url)
-    [
-       hostname: captures["host"],
-       port: (if String.strip(captures["port"]) == "", do: 5432, else: elem(Integer.parse(captures["port"]), 0)),
-       username: captures["username"],
-       password: captures["password"],
-       database: captures["database"]
-     ]
   end
 
 
