@@ -1,11 +1,10 @@
+const Foghorn = (function() {
+  let ret = {};
+  let websocket = null;
+  let connectionOpen = false;
+  let listeners = [];
 
-var Foghorn = (function() {
-  var ret = {};
-  var websocket = null;
-  var connectionOpen = false;
-  var listeners = [];
-
-  var log = function() {
+  const log = function() {
     log.history= log.history || []
     log.history.push(arguments)
     if(window.console && window.console.log.apply) {
@@ -18,7 +17,7 @@ var Foghorn = (function() {
   ret.listen = function(tablename, cb, connectedCallback) {
     ensureConnected(function () {
       log('FOGHORN: new callback for', tablename);
-      var reqId = new Date().getTime();
+      let reqId = new Date().getTime();
       listeners.push({table: tablename, callback: cb, request_id: reqId, connected_callback: connectedCallback});
       websocket.send(JSON.stringify({op: 'LISTEN', table: tablename, request_id: reqId}));
     })
@@ -42,6 +41,10 @@ var Foghorn = (function() {
     })
   };
 
+  ret.connected = function() {
+    return connected()
+  };
+
   function ensureConnected(func) {
     connect();
     if(connected()) {
@@ -53,7 +56,7 @@ var Foghorn = (function() {
   }
 
   function notify(payload) {
-    log('notify called with', payload);
+    // log('notify called with', payload);
     if(payload.op == 'LISTEN') {
       const newListeners = listeners.map((listener) => {
         if(listener.request_id == payload.request_id) {
