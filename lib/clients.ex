@@ -64,18 +64,18 @@ defmodule Clients do
   end
 
   def handle_call({:remove_all, pid}, _from, state) do
-      new_clients = Enum.reduce(
-        state[:clients],
-        %{},
-        fn {table, clients}, acc ->
-          new_clients_for_table = Enum.filter(clients,
-              fn {_mnum, mpid} -> mpid == pid end
-            )
-          Map.put(acc, table, new_clients_for_table)
-        end
-      )
-      {:reply, pid, Map.put(state, :clients, new_clients)}
-    end
+    new_clients = Enum.reduce(
+      state[:clients],
+      %{},
+      fn {table, clients}, acc ->
+        new_clients_for_table = Enum.filter(clients,
+            fn {_mnum, mpid} -> mpid != pid end
+          )
+        Map.put(acc, table, new_clients_for_table)
+      end
+    )
+    {:reply, pid, Map.put(state, :clients, new_clients)}
+  end
 
 
   def handle_call({:get_empty_tables}, _from, state) do
