@@ -14,7 +14,7 @@ defmodule Foghorn do
   ## Interface functions >
 
   def start(_, _) do
-    start_link
+    start_link()
   end
 
   def start_link do
@@ -22,63 +22,48 @@ defmodule Foghorn do
   end
 
   def listen(listener, tables) do
-    Enum.each tables, fn table -> GenServer.call(:triggers, {:add_trigger, table}) end
     Clients.add_client(listener, tables)
   end
 
   def unlisten(pid, client_id) do
     Clients.remove_client(pid, client_id)
-    empty_tables = Clients.empty_tables
-    Enum.each empty_tables, fn table -> remove_trigger(table) end
-    client_id
   end
 
   def stop_listening_for(pid) do
     Clients.remove_clients_with_pid(pid)
     empty_tables = Clients.empty_tables
-    Enum.each empty_tables, fn table -> remove_trigger(table) end
+    IO.puts "empty tables #{inspect(empty_tables)}"
   end
 
-  def add_trigger(table) do
-    GenServer.call(:triggers, {:add_trigger, table})
-  end
-
-  def remove_trigger(table) do
-    GenServer.call(:triggers, {:remove_trigger, table})
-  end
-
-  # foghorn.change(["users", "cows"], (id, tablename) => {})
-  #   - save client for users and cows
-  #   - ensure trigger to users and cows
-  #   - on trigger notify the right clients
 
   ## < Interface functions
-
   def main(x) do
     init(x)
   end
 
   def init(_) do
-    IO.puts "Foghorn innnit"
-    pg_conf = read_pg_conf_from_env
-    IO.inspect pg_conf
+    IO.puts "Foghorn init"
+    # pg_conf = read_pg_conf_from_env()
+    app_conf = read_conf_from_yaml()
+    hard_coded_db_name = "main"
+    pg_conf = extract_postgres_connection_config app_conf, hard_coded_db_name
+    :ok = Triggers.add_triggers(%{pg_conf: pg_conf, app_conf: app_conf, db_name: hard_coded_db_name})
+
     {:ok, _} = Notifications.start_link(%{pg_conf: pg_conf, channel: @channel}, [name: :notifications])
-    {:ok, _} = Triggers.start_link(%{pg_conf: pg_conf}, [name: :triggers])
-    {:ok, _} = Clients.start_link(%{}, [])
+    {:ok, _} = Clients.start_link( %{app_conf: app_conf}, [])
     {:ok, _} = HTTPServer.start()
-    {:ok, {}}
+    {:ok, %{pg_conf: pg_conf, app_conf: app_conf, db_name: hard_coded_db_name}}
   end
 
-  def handle_info(event, state) do
-    case event do
-      {:notification, _pid, _ref, "table_change", payload} ->
-        IO.puts("Foghorn: table_change: #{payload}")
-
-      _ ->
-        IO.puts("Foghorn: something strange shows up: #{event} on state #{state}")
-    end
-    {:noreply, state}
+  def terminate(_reason, state) do
+    IO.puts "Foghorn terminating"
+    Triggers.remove_all_foghorn_triggers(state)
   end
+
+
+  #######################
+  ##  PRIVATE PARTS
+  #######################
 
   defp read_pg_conf_from_env do
     regex = ~r/(?<db_type>\w+):\/\/(?<username>.+):(?<password>.+)@(?<host>[\w.]+)(:(?<port>.*))?\/(?<database>.+)/iu
@@ -107,6 +92,27 @@ defmodule Foghorn do
       ]
     end
   end
+
+  defp read_conf_from_yaml do
+    yaml_path = System.get_env("FOGHORN_CONFIG") || "./config/default.yaml"
+    IO.puts "Reading configuration from #{yaml_path}"
+    config = YamlElixir.read_from_file(yaml_path)
+    IO.puts "------------8<---------------"
+    IO.inspect config
+    IO.puts "------------>8---------------"
+    config
+  end
+
+  defp extract_postgres_connection_config(app_conf, db_name) do
+      [
+        hostname: app_conf["databases"][db_name]["host"],
+        port:     app_conf["databases"][db_name]["port"],
+        username: app_conf["databases"][db_name]["user"],
+        password: app_conf["databases"][db_name]["password"],
+        database: app_conf["databases"][db_name]["database"],
+      ]
+    end
+
 
 
 end

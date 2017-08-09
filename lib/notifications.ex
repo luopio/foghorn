@@ -16,12 +16,12 @@ defmodule Notifications do
 
   def handle_info(event, state) do
     case event do
-      {:notification, pid, ref, channel, payload} ->
-        IO.puts("Notifications.handle_info sees table change #{payload}")
-        [_, tablename, operation, id] = Regex.run(~r/(.*),(.*),(.*)/, payload)
-        Clients.notify_clients_of(tablename, operation, id)
+      {:notification, _pid, _ref, _channel, payload} ->
+        [_, tablename, operation, json] = Regex.run(~r/(.*),(.*),({.*})/, payload)
+        # IO.puts("Notifications.handle_info sees table change #{tablename} #{operation}")
+        Clients.notify_clients_of(tablename, operation, json)
       _ ->
-        IO.puts("Notifications.handle_info something strange shows up: #{event} on state #{state}")
+        IO.puts("!!! Notifications.handle_info something strange shows up: #{event} on state #{state}")
     end
     {:noreply, state}
   end

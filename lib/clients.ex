@@ -3,14 +3,30 @@ defmodule Clients do
 
   use GenServer
 
-  def start_link(_state, _opts) do
+  def start_link(state, _opts) do
     IO.puts "Clients start_link"
-    initial_state = %{clients: %{}, client_running_number: 0}
+    # form a lookup map of directives for a specific table
+    tables_directives = Enum.reduce(
+      state[:app_conf]["listen"],
+      %{},
+      fn {directive_name, directive}, acc ->
+        # directive = state[:app_conf]["listen"][directive_name]
+        unless Map.has_key?(acc, directive["table"]) do
+          Map.put(acc, directive["table"], [directive_name])
+        else
+          directives_for_table = acc[directive["table"]]
+          unless directive_name in directives_for_table do
+            Map.put(acc, directive["table"], [directive_name | directives_for_table])
+          end
+        end
+      end)
+
+    initial_state = %{clients: %{}, app_conf: state[:app_conf], client_running_number: 0, tables_directives: tables_directives}
     GenServer.start_link(__MODULE__, initial_state, [name: :clients])
   end
 
-  def add_client(pid, tables) do
-    GenServer.call(:clients, {:add, pid, tables})
+  def add_client(pid, directives) do
+    GenServer.call(:clients, {:add, pid, directives})
   end
 
   def empty_tables do
@@ -25,24 +41,30 @@ defmodule Clients do
     GenServer.call(:clients, {:remove_all, pid})
   end
 
-  def notify_clients_of(table, operation \\ nil, id \\ nil) do
-    GenServer.cast(:clients, {:notify, {table, operation, id}})
+  def notify_clients_of(table, operation \\ nil, json \\ nil) do
+    GenServer.cast(:clients, {:notify, {table, operation, json}})
   end
 
-  def handle_call({:add, client_pid, tables}, _from, state) do
+  def handle_call({:add, client_pid, directive_names}, _from, state) do
     client_number = state[:client_running_number] + 1
     new_clients = Enum.reduce(
-      tables,
+      directive_names,
       state[:clients],
-      fn table, acc ->
-        unless Map.has_key?(acc, table) do
-          Map.put(acc, table, [ {client_number, client_pid} | [] ])
+      fn directive, acc ->
+        unless Map.has_key?(state[:app_conf]["listen"], directive) do
+          IO.puts "(W)    Unknown directive #{directive}, silently ignoring"
+          acc
         else
-          Map.put(acc, table, [ {client_number, client_pid} | acc[table]] )
+          unless Map.has_key?(acc, directive) do
+            Map.put(acc, directive, [ {client_number, client_pid} | [] ])
+          else
+            Map.put(acc, directive, [ {client_number, client_pid} | acc[directive]] )
+          end
         end
       end
     )
-    {:reply, client_number, Map.merge(state, %{clients: new_clients, client_running_number: client_number})}
+    {:reply, client_number, Map.merge(state, %{clients: new_clients,
+      client_running_number: client_number})}
   end
 
   #
@@ -67,24 +89,52 @@ defmodule Clients do
     new_clients = Enum.reduce(
       state[:clients],
       %{},
-      fn {table, clients}, acc ->
-        new_clients_for_table = Enum.filter(clients,
+      fn {directive_name, clients}, acc ->
+        new_clients_for_directive = Enum.filter(clients,
             fn {_mnum, mpid} -> mpid != pid end
           )
-        Map.put(acc, table, new_clients_for_table)
+        Map.put(acc, directive_name, new_clients_for_directive)
       end
     )
-    {:reply, pid, Map.put(state, :clients, new_clients)}
+    new_state = Map.put(state, :clients, new_clients)
+    # IO.puts "after removal:"
+    # IO.inspect new_state
+    {:reply, pid, new_state}
   end
 
-
   def handle_call({:get_empty_tables}, _from, state) do
-      empty_tables = state[:clients]
-        |> Enum.filter(fn {table, clients} -> length(clients) == 0 end)
-        |> Enum.map(fn {table, clients} -> table end)
-      {:reply, empty_tables, state}
-    end
+    empty_tables = state[:clients]
+      |> Enum.filter(fn {_table, clients} -> length(clients) == 0 end)
+      |> Enum.map(fn {table, _clients} -> table end)
+    {:reply, empty_tables, state}
+  end
 
+  def handle_cast({:notify, {table, operation, payload_json}}, state) do
+    directive_names = state[:tables_directives][table]
+    {:ok, all_attributes} = Poison.decode(payload_json)
+    for directive_name <- directive_names do
+      directive = state[:app_conf]["listen"][directive_name]
+      payload = form_payload(directive, all_attributes)
+      if state[:clients][directive_name] do
+        Enum.each(
+          state[:clients][directive_name],
+          fn {_num, pid} ->
+            IO.puts "let's notify client PID #{inspect(pid)} on directive #{directive_name}. Payload: #{inspect(payload)}"
+            GenServer.cast(pid, {directive_name, operation, payload})
+          end)
+      end
+    end
+    {:noreply, state}
+  end
+
+  def form_payload(directive, attrs) do
+    Enum.reduce(
+      directive["payload"],
+      %{},
+      fn {masked_name, wanted_payload}, acc ->
+        Map.put(acc, masked_name, attrs[wanted_payload])
+      end)
+  end
 
 #  def handle_call({:remove, client_number, tables}, _from, state) do
 #    current_clients = state[:clients]
@@ -103,18 +153,5 @@ defmodule Clients do
 #    )
 #    {:reply, client_number, Map.put(state, :clients, new_clients)}
 #  end
-
-
-  def handle_cast({:notify, {table, operation, id}}, state) do
-    IO.inspect(state)
-    if state[:clients][table] do
-      Enum.each(state[:clients][table], fn {num, pid} ->
-          IO.puts "let's notify client PID"
-          GenServer.cast(pid, {table, operation, id})
-        end
-      )
-    end
-    {:noreply, state}
-  end
 
 end

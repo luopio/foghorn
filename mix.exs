@@ -7,7 +7,7 @@ defmodule Foghorn.Mixfile do
      elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps,
+     deps: deps(),
      escript: [main_module: Foghorn]
      ]
   end
@@ -17,7 +17,14 @@ defmodule Foghorn.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     [
-      applications: [:logger, :postgrex, :cowboy, :ranch, :poison],
+      applications: [
+        :logger,
+        :postgrex,
+        :cowboy,
+        :ranch,
+        :poison,
+        :yaml_elixir
+      ],
       mod: {Foghorn, []}
     ]
   end
@@ -36,7 +43,8 @@ defmodule Foghorn.Mixfile do
       {:cowboy, "1.0.0" },
       {:postgrex, "~> 0.11.1"},
       {:poison, "~> 2.0"},
-      {:exrm, "~> 1.0.5"}
+      {:exrm, "~> 1.0.5"},
+      {:yaml_elixir, "~> 1.3.1"}
     ]
   end
 end

@@ -2,7 +2,7 @@ defmodule Websockets do
   @moduledoc false
   @behaviour :cowboy_websocket_handler
 
-  def init({tcp, http}, _req, _opts) do
+  def init({_tcp, _http}, _req, _opts) do
     IO.puts ">> websockets init"
     {:upgrade, :protocol, :cowboy_websocket}
   end
@@ -13,8 +13,8 @@ defmodule Websockets do
   end
 
   def websocket_terminate(_reason, _req, _state) do
-    IO.puts ">> websockets terminate"
-    Foghorn.stop_listening_for(self)
+    IO.puts ">> websockets terminate #{inspect(self())}"
+    Foghorn.stop_listening_for(self())
     :ok
   end
 
@@ -31,17 +31,17 @@ defmodule Websockets do
     ret_val = case payload do
         %{"op" => "STOP"} ->
           IO.puts "op stop!"
-          Foghorn.stop_listening_for(self)
-          %{status: "ok", table: "ALL", op: "STOP"}
+          Foghorn.stop_listening_for(self())
+          %{status: "ok", directive: "ALL", op: "STOP"}
 
         %{"op" => "UNLISTEN", "client_id" => remove_client_id} ->
           IO.puts "op unlisten"
-          client_id = Foghorn.unlisten(self, remove_client_id)
+          client_id = Foghorn.unlisten(self(), remove_client_id)
           %{status: "ok", op: "UNLISTEN", client_id: client_id}
 
-        %{"op" => "LISTEN", "request_id" => request_id, "table" => table} ->
-          client_id = Foghorn.listen(self, [table])
-          %{status: "ok", table: table, op: "LISTEN", client_id: client_id, request_id: request_id}
+        %{"op" => "LISTEN", "request_id" => request_id, "directive" => directive} ->
+          client_id = Foghorn.listen(self(), [directive])
+          %{status: "ok", directive: directive, op: "LISTEN", client_id: client_id, request_id: request_id}
 
         _ ->
           IO.warn "Unknown fancy command: ", payload
@@ -57,8 +57,8 @@ defmodule Websockets do
   end
 
   # Sends the notification to the client
-  def websocket_info({:"$gen_cast", {table, operation, id}}, req, state) do
-    {:reply, {:text, Poison.encode!(%{table: table, op: operation, id: id})}, req, state}
+  def websocket_info({:"$gen_cast", {directive, operation, payload}}, req, state) do
+    {:reply, {:text, Poison.encode!(%{directive: directive, op: operation, payload: payload})}, req, state}
   end
 
 #  def websocket_handle({:binary, content}, req, state) do

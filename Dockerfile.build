@@ -2,12 +2,11 @@ FROM msaraiva/elixir-dev
 MAINTAINER Lauri Kainulainen <lauri.kainulainen@gmail.com>
 
 # Important!  Update this no-op ENV to refresh image
-ENV REFRESHED_AT 2016-06-16
+ENV REFRESHED_AT 2017-02-21
 ENV HOME /root
 
 # Upgrade all packages and install needed packages
-RUN apk --update upgrade && \
-  apk add docker nodejs erlang-xmerl && \
+RUN apk add --update docker nodejs erlang-xmerl && \
   npm install -g brunch && \
   rm -rf /var/cache/apk/*
 
