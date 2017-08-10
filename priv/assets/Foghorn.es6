@@ -1,4 +1,5 @@
 const Foghorn = (function() {
+  const _version = "2"
   let ret = {};
   let websocket = null;
   let connectionOpen = false;
@@ -14,12 +15,17 @@ const Foghorn = (function() {
 
   ret.ADDRESS = 'ws://localhost:5555/ws';
 
-  ret.listen = function(tablename, cb, connectedCallback) {
+  ret.listen = function(directives, cb, connectedCallback) {
     ensureConnected(function () {
-      log('FOGHORN: new callback for', tablename);
+      log('FOGHORN: new callback for directive', directives);
       let reqId = new Date().getTime();
-      listeners.push({table: tablename, callback: cb, request_id: reqId, connected_callback: connectedCallback});
-      websocket.send(JSON.stringify({op: 'LISTEN', table: tablename, request_id: reqId}));
+      if(typeof directives === "string") {
+        directives = [directives]
+      }
+      directives.forEach((directive) => {
+        listeners.push({directive: directive, callback: cb, request_id: reqId, connected_callback: connectedCallback});
+        websocket.send(JSON.stringify({op: 'LISTEN', directive: directive, request_id: reqId}));
+      })
     })
   };
 
@@ -28,7 +34,7 @@ const Foghorn = (function() {
       log('FOGHORN: remove callback with ID', listenerId);
       websocket.send(JSON.stringify({op: 'UNLISTEN', client_id: listenerId}));
       listeners = listeners.filter(function(listener) {
-        return listener.client_id != listenerId;
+        return listener.client_id !== listenerId;
       });
     });
   };
@@ -57,9 +63,9 @@ const Foghorn = (function() {
 
   function notify(payload) {
     // log('notify called with', payload);
-    if(payload.op == 'LISTEN') {
+    if(payload.op === 'LISTEN') {
       const newListeners = listeners.map((listener) => {
-        if(listener.request_id == payload.request_id) {
+        if(listener.request_id === payload.request_id) {
           listener.connected_callback && listener.connected_callback.call(this, payload.client_id);
           return Object.assign(listener, {client_id: payload.client_id});
         }
@@ -68,8 +74,8 @@ const Foghorn = (function() {
       listeners = newListeners;
     } else {
       listeners.forEach(function(listener) {
-        if(listener.table == payload.table) {
-          listener.callback.call(this, (payload.table || payload.client_id), payload.op, payload.id);
+        if(listener.directive == payload.directive) {
+          listener.callback.call(this, (payload.directive || payload.client_id), payload.op, payload.payload);
         }
       });
     }

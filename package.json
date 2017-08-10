@@ -1,6 +1,6 @@
 {
   "name": "foghorn",
-  "version": "0.0.1",
+  "version": "2.0",
   "description": "Foghorn notifies your Javascript about changes in your database",
   "main": "index.js",
   "directories": {

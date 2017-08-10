@@ -45,7 +45,7 @@ defmodule Websockets do
 
         _ ->
           IO.warn "Unknown fancy command: ", payload
-          ret_val = %{status: "error", msg: "Unknown fancy command: " <> payload}
+          %{status: "error", msg: "Unknown fancy command: " <> payload}
       end
     {:reply, {:text, Poison.encode!(ret_val)}, req, state}
   end

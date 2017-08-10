@@ -3,8 +3,10 @@ MAINTAINER Lauri Kainulainen <lauri.kainulainen@gmail.com>
 
 RUN apk --update add ncurses-libs && rm -rf /var/cache/apk/*
 
-COPY rel /rel
+COPY _build /_build
 
 EXPOSE 5555
 
-ENTRYPOINT ["rel/foghorn/bin/foghorn"]
+ENV FOGHORN_CONFIG /config.yaml
+
+ENTRYPOINT ["_build/prod/rel/foghorn/bin/foghorn"]

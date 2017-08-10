@@ -2,14 +2,15 @@ defmodule Foghorn.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :foghorn,
-     version: "0.0.1",
-     elixir: "~> 1.2",
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     deps: deps(),
-     escript: [main_module: Foghorn]
-     ]
+    [
+      app: :foghorn,
+      version: "2.0.0",
+      elixir: "~> 1.4.5",
+      build_embedded: Mix.env == :prod,
+      start_permanent: Mix.env == :prod,
+      deps: deps(),
+      escript: [main_module: Foghorn]
+    ]
   end
 
   # Configuration for the OTP application
@@ -43,7 +44,7 @@ defmodule Foghorn.Mixfile do
       {:cowboy, "1.0.0" },
       {:postgrex, "~> 0.11.1"},
       {:poison, "~> 2.0"},
-      {:exrm, "~> 1.0.5"},
+      {:distillery, "~> 1.4.1"},
       {:yaml_elixir, "~> 1.3.1"}
     ]
   end

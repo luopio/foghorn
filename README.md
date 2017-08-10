@@ -2,41 +2,6 @@
 
 Watches your database for changes and notifies listening clients through websockets.
 
-I.e. you start a Foghorn server and connect to it in your client javascript:
-```js
-  // Set the address to your running foghorn server. As we are on websockets,
-  // no funky cross-domain settings are required.
-  Foghorn.ADDRESS = 'ws://localhost:5555/ws';
-
-  // Foghorn.listen(tableName:string,
-  //                notifyCallback:function(tablename, operation, id),
-  //                (optional)connectedCallback:function(listenerId))
-  Foghorn.listen(
-    'users',
-    function(tablename, operation, id) {
-      console.log('notified on', tablename, 'of a', operation, 'for the id:', id);
-    });
-```
-
-If you want to gracefully stop listening later on you can store the listener ID,
-which is given to you through `listen()` and close the connection:
-```js
-var myListenerId = null;
-Foghorn.listen(
-    'users',
-    function notifyCallback(tablename, operation, id) { ; }
-    function connectedCallback(listenerId) {
-      myListenerId = listenerId;
-    });
-
-// then later in your code you call
-myListenerId != null && Foghorn.unlisten(myListenerId);
-```
-
-## Supported databases
-
-Postgres (via NOTIFY).
-
 ## Installation
 
 ### Run with docker
@@ -44,47 +9,89 @@ Postgres (via NOTIFY).
 The easiest option. No local [Elixir](http://elixir-lang.org/) installation required, but you will need [Docker](https://www.docker.com/products/overview).
 
 ```
-docker run -ti -e "FOGHORN_DB=postgres://user:password@192.168.99.100:5432/database" -p 5555:5555 --rm luopio/foghorn:latest foreground
+docker run -ti -v configfile.yaml:/config.yaml -p 5555:5555 --rm luopio/foghorn:latest foreground
 ```
-
-You can also not define `FOGHORN_DB` and use the separate variables `FOGHORN_DB_USER`, `FOGHORN_DB_PASS`, `FOGHORN_DB_HOST`,
-`FOGHORN_DB_PORT` and `FOGHORN_DB_NAME`.
 
 ### Run directly with Elixir
 
 This requires a local [Elixir](http://elixir-lang.org/) installation.
 
 ```
-FOGHORN_DB="postgres://user:password@192.168.99.100:5432/database" mix run --no-halt
+FOGHORN_CONFIG="/path/to/config.yaml" mix run --no-halt
 ```
+
+## Configuration
+
+```yaml
+# Define the database(s) to connect to
+databases:
+  my_posts_database:
+    host: localhost
+    port: 7654
+    user: john
+    password: doe
+    database: my_database
+
+# Listening directives. Each directive defines which db and which table to listen to.
+# The payload defines what parameters to send to listening clients, where the key is
+# used as the key shown to the client and value is the name of the database column where
+# the value for clients is fetched
+listen:
+  general_post_change:
+    database: my_posts_database
+    table: posts
+    # here clients will receive a payload of {id: <id value of changed row>, title: <title of changed row>}
+    payload:
+      id: id
+      title: title
+
+  comment_change_via_posts:
+    database: my_posts_database
+    table: post_comments
+    # here clients will receive a payload of {id: <post_id>}
+    payload:
+      id: post_id  
+
+```
+
+## Client javascript
+
+A small javascript library is included to handle the client side communication. Include `Foghorn.es6` in your
+application and use it like so:
+```js
+  // Set the address to your running Foghorn server
+  Foghorn.ADDRESS = 'ws://localhost:5555/ws';
+
+  // Signature here
+  // Foghorn.listen(directiveNames: array<string>,
+  //                notifyCallback: function(tablename, operation, id),
+  //                (optional)connectedCallback: function(listenerId))
+  Foghorn.listen(
+    ['general_post_change', 'comment_change_via_posts'],
+    function(directive, operation, payload) {
+      console.log('Notified on', directive, 'of a', operation, 'with the payload', payload);
+      console.log('Affected post carries the id', payload.id)
+    });
+```
+
+## Supported databases
+
+Postgres (via NOTIFY).
 
 ## Test it
 
 Open up a browser on [localhost:5555](localhost:5555). If you used Docker and/or Docker-machine
 the host might be different.
 
-### Quick instructions on setting up Elixir (if needed)
-
-```
-brew install elixir
-# git clone this repo and cd into it
-mix deps.get
-# have a psql db running and configure access in foghorn.ex
-mix run --no-halt  # or "iex -S mix" for the repl experience
-# open browser and go to localhost:5555, add a table to listen to
-# change that table in the database and magic happens
-```
-
 ## Compiling the Javascript code
 
 The JS code is ES6 standard, thus it needs to be compiled to work on older browsers.
-A precompiled file is available under [/priv/assets](./priv/assets/). Compilation requires Babel:
+A precompiled file is available under [/priv/assets](./priv/assets/). Re-compilation requires Babel:
 
 ```
 npm install
 ./compile_javascript.sh
 ```
-
 
 ## How to build the Docker container
 
@@ -102,16 +109,14 @@ docker run -ti --rm -v $(pwd):/build elixir-builder /build/compile_release.sh
 
 Build the final container that contains your new release which you can then run independently
 ```
-docker build -t my_fancy_foghorn .
+docker build -t luopio/foghorn:2.0 .
 ```
 
 
 ## Things to do
 - Proper supervision tree
-- Disable testing UI on production
 - Authentication scheme (via shared table in database?)
 - Publish to Hex
-- Limit tables that notifications can be placed on
 - Multiple simultaneous databases -support
 - Other databases? (PRs welcome)
 
