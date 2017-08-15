@@ -22,12 +22,10 @@ defmodule Websockets do
   # Incoming messages are handled here
   #
   def websocket_handle({:text, command}, req, state) do
-    IO.puts ">> websocket handling"
-    IO.inspect command
-    payload = Poison.decode!(command)
-    IO.inspect payload
-    # IO.inspect req
-    # IO.inspect state
+    IO.puts ">> websocket handling #{inspect(command)}"
+    {:ok, payload} = Poison.decode(command)
+    # IO.puts ">> payload:"
+    # IO.inspect payload
     ret_val = case payload do
         %{"op" => "STOP"} ->
           IO.puts "op stop!"
@@ -35,7 +33,6 @@ defmodule Websockets do
           %{status: "ok", directive: "ALL", op: "STOP"}
 
         %{"op" => "UNLISTEN", "client_id" => remove_client_id} ->
-          IO.puts "op unlisten"
           client_id = Foghorn.unlisten(self(), remove_client_id)
           %{status: "ok", op: "UNLISTEN", client_id: client_id}
 

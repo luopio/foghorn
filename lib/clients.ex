@@ -71,7 +71,8 @@ defmodule Clients do
   # Remove a client based on the ID number given from a call to Clients.add_client
   # restrict to only the PIDs that created it
   #
-  def handle_call({:remove, client_number, pid}, _from, state) do
+  def handle_call({:remove, pid, client_number}, _from, state) do
+    # IO.puts "Removing client from #{client_number} #{inspect(pid)}"
     new_clients = Enum.reduce(
       state[:clients],
       %{},
