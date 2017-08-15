@@ -44,7 +44,7 @@ defmodule Foghorn.Mixfile do
       {:cowboy, "1.0.0" },
       {:postgrex, "~> 0.11.1"},
       {:poison, "~> 2.0"},
-      {:distillery, "~> 1.4.1"},
+      {:distillery, "~> 1.4.1", runtime: false},
       {:yaml_elixir, "~> 1.3.1"}
     ]
   end
