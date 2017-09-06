@@ -13,7 +13,7 @@ defmodule Websockets do
   end
 
   def websocket_terminate(_reason, _req, _state) do
-    IO.puts ">> websockets terminate #{inspect(self())}"
+    IO.puts ">> websockets terminate #{inspect(self())} #{inspect(_reason)}"
     Foghorn.stop_listening_for(self())
     :ok
   end
@@ -21,6 +21,11 @@ defmodule Websockets do
   #
   # Incoming messages are handled here
   #
+  def websocket_handle({:text, "PING"}, req, state) do
+    IO.puts ">> websocket handling ping-pong"
+    {:reply, {:text, "PONG"}, req, state}
+  end
+
   def websocket_handle({:text, command}, req, state) do
     IO.puts ">> websocket handling #{inspect(command)}"
     {:ok, payload} = Poison.decode(command)

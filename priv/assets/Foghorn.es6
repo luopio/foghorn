@@ -1,9 +1,11 @@
 const Foghorn = (function() {
-  const _version = "2"
+  const _version = "3"
+  const pingInterval = 30000;
   let ret = {};
   let websocket = null;
   let connectionOpen = false;
   let listeners = [];
+  let lastConnection = -1;
 
   const log = function() {
     log.history= log.history || []
@@ -57,7 +59,7 @@ const Foghorn = (function() {
       func();
     } else {
       log('FOGHORN: wait for connection to open...');
-      setTimeout(function() { func(); }, 500);
+      setTimeout(function() { ensureConnected(func); }, 500);
     }
   }
 
@@ -86,20 +88,28 @@ const Foghorn = (function() {
   }
 
   function connect() {
-    if(!websocket) {
+    if(!websocket || !connectionOpen) {
       websocket = new WebSocket(ret.ADDRESS);
       websocket.onopen = function(evt) {
         // log('FOGHORN: on open', evt)
         connectionOpen = true;
+        lastConnection = new Date().getTime()
       };
       websocket.onclose = function(evt) {
-        // log('FOGHORN: on close', evt)
+        // reconnect...
+        disconnect()
+        connect()
       };
       websocket.onmessage = function(evt) {
-        // log('FOGHORN: on message', evt, this)
-        var payload = JSON.parse(evt.data);
-        notify(payload);
+        log('FOGHORN: on message', evt, this)
+        lastConnection = new Date().getTime()
+        if(evt.data !== 'PONG') {
+          const payload = JSON.parse(evt.data);
+          notify(payload);
+        }
       };
+
+      setInterval(ping, pingInterval)
     }
     return websocket;
   }
@@ -107,6 +117,19 @@ const Foghorn = (function() {
   function disconnect() {
     websocket.close();
     connectionOpen = false;
+  }
+
+  function ping() {
+    const ct = new Date().getTime()
+    const dt = ct - lastConnection
+    if(dt > pingInterval) {
+      websocket.send('PING')
+      if(dt > pingInterval * 2) {
+        // reconnect...
+        disconnect()
+        connect()
+      }
+    }
   }
 
   return ret;

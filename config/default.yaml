@@ -19,6 +19,11 @@ listen:
   property_change_via_images:
     database: main
     table: property_images
-    notify_via: properties
+    payload:
+      id: property_id
+
+  property_change_via_events:
+    database: main
+    table: property_events
     payload:
       id: property_id
