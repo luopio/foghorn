@@ -7,14 +7,14 @@ defmodule Websockets do
     {:upgrade, :protocol, :cowboy_websocket}
   end
 
-  def websocket_init(_TransportName, req, _opts) do
+  def websocket_init(_transport_name, req, _opts) do
     IO.puts ">> websockets websocket_init"
     {:ok, req, :kikkeliskokkelis}
   end
 
-  def websocket_terminate(_reason, _req, _state) do
-    IO.puts ">> websockets terminate #{inspect(self())} #{inspect(_reason)}"
-    Foghorn.stop_listening_for(self())
+  def websocket_terminate(reason, _req, _state) do
+    IO.puts ">> websockets terminate #{inspect(self())} #{inspect(reason)}"
+    # we're assuming the client will reconnect shortly
     :ok
   end
 
@@ -27,29 +27,32 @@ defmodule Websockets do
   end
 
   def websocket_handle({:text, command}, req, state) do
-    IO.puts ">> websocket handling #{inspect(command)}"
-    {:ok, payload} = Poison.decode(command)
-    # IO.puts ">> payload:"
-    # IO.inspect payload
-    ret_val = case payload do
-        %{"op" => "STOP"} ->
-          IO.puts "op stop!"
-          Foghorn.stop_listening_for(self())
-          %{status: "ok", directive: "ALL", op: "STOP"}
+    IO.puts ">> websocket_handle: #{inspect(command)}"
+    case Poison.decode(command) do
+      {:ok, payload} ->
+        ret_val = case payload do
+          %{"op" => "UNLISTEN", "client_id" => remove_client_id} ->
+            client_id = Clients.remove_client(self(), remove_client_id)
+            %{status: "ok", op: "UNLISTEN", client_id: client_id}
 
-        %{"op" => "UNLISTEN", "client_id" => remove_client_id} ->
-          client_id = Foghorn.unlisten(self(), remove_client_id)
-          %{status: "ok", op: "UNLISTEN", client_id: client_id}
+          %{"op" => "LISTEN", "request_id" => request_id, "directives" => directives, "client_id" => client_id} ->
+            client_id = Clients.add_client(client_id, self(), directives)
+            %{status: "ok", directives: directives, op: "LISTEN", client_id: client_id, request_id: request_id}
 
-        %{"op" => "LISTEN", "request_id" => request_id, "directive" => directive} ->
-          client_id = Foghorn.listen(self(), [directive])
-          %{status: "ok", directive: directive, op: "LISTEN", client_id: client_id, request_id: request_id}
+          %{"op" => "RECONNECT", "client_id" => client_id} ->
+            client_id = Clients.reconnect_client(self(), client_id)
+            %{status: "ok", op: "RECONNECT", client_id: client_id}
 
-        _ ->
-          IO.warn "Unknown fancy command: ", payload
-          %{status: "error", msg: "Unknown fancy command: " <> payload}
-      end
-    {:reply, {:text, Poison.encode!(ret_val)}, req, state}
+          _ ->
+            IO.warn "Unknown fancy command: ", payload
+            %{status: "error", msg: "Unknown fancy command: #{IO.inspect payload}"}
+        end
+        {:reply, {:text, Poison.encode!(ret_val)}, req, state}
+
+      _ ->
+        IO.puts ">> websocket_handle: Error reading payload: #{command}"
+        {:reply, {:text, Poison.encode!(%{status: "error", message: "Don't know how to handle: #{command}"})}, req, state}
+    end
   end
 
   def websocket_handle(_data, req, state) do

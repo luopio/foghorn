@@ -1,6 +1,6 @@
 defmodule Notifications do
   @moduledoc false
-  
+
   use GenServer
 
   def start_link(state, opts) do
@@ -9,8 +9,13 @@ defmodule Notifications do
 
   def init(%{pg_conf: pg_conf, channel: channel}) do
     IO.puts "Notifications init"
-    {:ok, pid} = Postgrex.Notifications.start_link(pg_conf)
-    {:ok, ref} = Postgrex.Notifications.listen(pid, channel)
+    {pid, ref} = if pg_conf[:hostname] != "__test__" do
+      {:ok, pid} = Postgrex.Notifications.start_link(pg_conf)
+      {:ok, ref} = Postgrex.Notifications.listen(pid, channel)
+      {pid, ref}
+    else
+      {nil, nil}
+    end
     {:ok, {pid, channel, ref}}
   end
 
@@ -26,11 +31,11 @@ defmodule Notifications do
     {:noreply, state}
   end
 
-#  def handle_call(_msg, _from, state) do
-#    {:reply, :ok, state}
-#  end
-#
-#  def handle_cast(_msg, state) do
-#    {:noreply, state}
-#  end
+  #  def handle_call(_msg, _from, state) do
+  #    {:reply, :ok, state}
+  #  end
+  #
+  #  def handle_cast(_msg, state) do
+  #    {:noreply, state}
+  #  end
 end

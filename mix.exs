@@ -4,8 +4,8 @@ defmodule Foghorn.Mixfile do
   def project do
     [
       app: :foghorn,
-      version: "2.1.0",
-      elixir: "~> 1.4.5",
+      version: "2.3.0",
+      elixir: "~> 1.5.2",
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
       deps: deps(),
@@ -45,7 +45,8 @@ defmodule Foghorn.Mixfile do
       {:postgrex, "~> 0.11.1"},
       {:poison, "~> 2.0"},
       {:distillery, "~> 1.4.1", runtime: false},
-      {:yaml_elixir, "~> 1.3.1"}
+      {:yaml_elixir, "~> 1.3.1"},
+      {:socket, "~> 0.3", runtime: false},
     ]
   end
 end

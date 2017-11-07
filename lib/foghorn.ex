@@ -21,21 +21,6 @@ defmodule Foghorn do
     GenServer.start_link(__MODULE__, {}, [name: :foggy])
   end
 
-  def listen(listener, tables) do
-    Clients.add_client(listener, tables)
-  end
-
-  def unlisten(pid, client_id) do
-    Clients.remove_client(pid, client_id)
-  end
-
-  def stop_listening_for(pid) do
-    Clients.remove_clients_with_pid(pid)
-    empty_tables = Clients.empty_tables
-    IO.puts "empty tables #{inspect(empty_tables)}"
-  end
-
-
   ## < Interface functions
   def main(x) do
     init(x)

@@ -1,0 +1,10 @@
+databases:
+  main:
+    host: __test__
+
+listen:
+  testing_change:
+    database: main
+    table: test_table
+    payload:
+      id: id
