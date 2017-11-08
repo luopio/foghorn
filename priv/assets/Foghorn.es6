@@ -1,5 +1,5 @@
 const Foghorn = (function() {
-  const _version = "2.3.0"
+  const _version = "2.3.1"
   const pingInterval = 30000
   let ret = {}
   let websocket = null
@@ -142,7 +142,8 @@ const Foghorn = (function() {
       log('FOGHORN: --- on close', evt.code, evt)
       // reconnect...
       disconnect()
-      connect()
+      // delay a bit between subsequent failed connections
+      setTimeout(() => connect(), failedConnections * 2000)
     }
     websocket.onmessage = function(evt) {
       log('FOGHORN websocket.onmessage:', evt, this)

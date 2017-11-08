@@ -82,9 +82,9 @@ defmodule Foghorn do
     yaml_path = System.get_env("FOGHORN_CONFIG") || "./config/default.yaml"
     IO.puts "Reading configuration from #{yaml_path}"
     config = YamlElixir.read_from_file(yaml_path)
-    IO.puts "------------8<---------------"
-    IO.inspect config
-    IO.puts "------------>8---------------"
+#    IO.puts "------------8<---------------"
+#    IO.inspect config
+#    IO.puts "------------>8---------------"
     config
   end
 
