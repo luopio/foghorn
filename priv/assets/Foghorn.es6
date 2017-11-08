@@ -19,7 +19,7 @@ const Foghorn = (function() {
 
   ret.ADDRESS = 'ws://localhost:5555/ws'
 
-  ret.listen = function(directives, cb) {
+  ret.listen = function(directives, cb, connectedCallback) {
     log('FOGHORN.listen: called for', directives)
     ensureConnected(function() {
       log('FOGHORN: new callback for directive', directives)
@@ -38,6 +38,7 @@ const Foghorn = (function() {
     ensureConnected(function() {
       log('FOGHORN.unlisten')
       websocket.send(JSON.stringify({op: 'UNLISTEN', client_id: currentClientId}))
+      listeners = []
     })
   }
 
@@ -63,21 +64,14 @@ const Foghorn = (function() {
     log('FOGHORN: notify called with', payload, 'listeners:', listeners)
     // Return message from a LISTEN request
     if(payload.op === 'LISTEN') {
-      const newListeners = listeners.map((listener) => {
-        if(listener.request_id === payload.request_id) {
-          return Object.assign(listener, {client_id: payload.client_id})
-        }
-        return listener
-      })
+      // update the client_id
       currentClientId = payload.client_id
-      listeners = newListeners
     }
     else if(payload.op === 'RECONNECT') {
       log('FOGHORN: reconnect successful for', payload.client_id)
     }
     else if(payload.op === 'UNLISTEN') {
       log('FOGHORN: unlisten successful for', payload.client_id)
-      listeners = []
     }
     // Actual notifications being sent to listeners
     else {
