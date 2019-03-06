@@ -67,7 +67,7 @@ defmodule Foghorn do
       captures = Regex.named_captures(regex, db_url)
       %{
         hostname: captures["host"],
-        port: (if String.strip(captures["port"]) == "", do: 5432, else: elem(Integer.parse(captures["port"]), 0)),
+        port: (if String.trim(captures["port"]) == "", do: 5432, else: elem(Integer.parse(captures["port"]), 0)),
         username: captures["username"],
         password: captures["password"],
         database: captures["database"]

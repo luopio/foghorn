@@ -4,7 +4,7 @@ defmodule Foghorn.Mixfile do
   def project do
     [
       app: :foghorn,
-      version: "2.4.0",
+      version: "2.4.1",
       elixir: "~> 1.6.5",
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
@@ -42,7 +42,7 @@ defmodule Foghorn.Mixfile do
   defp deps do
     [
       {:cowboy, "1.0.0" },
-      {:postgrex, "~> 0.11.1"},
+      {:postgrex, "~> 0.14.1"},
       {:poison, "~> 2.0"},
       {:distillery, "~> 1.4.1", runtime: false},
       {:yaml_elixir, "~> 1.3.1"},

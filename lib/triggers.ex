@@ -1,14 +1,15 @@
 defmodule Triggers do
   @moduledoc false
-  
+
   def add_triggers(%{pg_conf: pg_conf, app_conf: app_conf}) do
-    pgc = nil
-    if pg_conf[:hostname] != "__test__" do
-      IO.puts "Adding triggers for tables"
-      {:ok, pgc} = Postgrex.start_link(pg_conf)
-      create_psql_notification_function(pgc)
-      remove_all_foghorn_triggers(pgc)
-    end
+    pgc =
+      if pg_conf[:hostname] != "__test__" do
+        IO.puts "Adding triggers for tables"
+        {:ok, pgc} = Postgrex.start_link(pg_conf)
+        create_psql_notification_function(pgc)
+        remove_all_foghorn_triggers(pgc)
+        pgc
+      end
     listen_directives = app_conf["listen"]
     for {listen_directive_name, listen_directive} <- listen_directives do
       add_trigger(listen_directive_name, listen_directive["table"], pgc)

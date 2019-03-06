@@ -5,6 +5,10 @@ defmodule Clients do
 
   use GenServer
 
+  def init(args) do
+    {:ok, args}
+  end
+
   def start_link(state, _opts) do
     IO.puts "Clients start_link"
     # form a lookup map of directives for a specific table

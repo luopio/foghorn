@@ -117,7 +117,8 @@ docker build -t luopio/foghorn:2.0 .
 ```
 
 
-## Things to do
+## Things to do maybe
+
 - Proper supervision tree
 - Authentication scheme (via shared table in database?)
 - Publish to Hex
