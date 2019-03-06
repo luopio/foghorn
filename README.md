@@ -24,13 +24,12 @@ FOGHORN_CONFIG="/path/to/config.yaml" mix run --no-halt
 
 ```yaml
 # Define the database(s) to connect to
-databases:
-  my_posts_database:
-    host: localhost
-    port: 7654
-    user: john
-    password: doe
-    database: my_database
+database:
+  host: localhost
+  port: 7654
+  user: john
+  password: doe
+  database: my_database
 
 # Listening directives. Each directive defines which db and which table to listen to.
 # The payload defines what parameters to send to listening clients, where the key is
@@ -38,7 +37,6 @@ databases:
 # the value for clients is fetched
 listen:
   general_post_change:
-    database: my_posts_database
     table: posts
     # here clients will receive a payload of {id: <id value of changed row>, title: <title of changed row>}
     payload:
@@ -46,12 +44,18 @@ listen:
       title: title
 
   comment_change_via_posts:
-    database: my_posts_database
     table: post_comments
     # here clients will receive a payload of {id: <post_id>}
     payload:
       id: post_id  
 
+```
+
+You can override the database connection with an environment variable. This will take precedence over the config
+file: 
+
+```bash
+FOGHORN_DB=postgres://user:pass@host:post/database FOGHORN_CONFIG="/path/to/config.yaml" mix run --no-halt
 ```
 
 ## Client javascript

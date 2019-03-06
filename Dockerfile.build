@@ -1,10 +1,10 @@
-FROM msaraiva/erlang:18.3
+FROM erlang:20-alpine
 MAINTAINER Lauri Kainulainen <lauri.kainulainen@gmail.com>
 
-ENV ELIXIR_VERSION 1.5.2
+ENV ELIXIR_VERSION 1.6.5
 
 # Important!  Update this no-op ENV to refresh image
-ENV REFRESHED_AT 2017-08-10
+ENV REFRESHED_AT 2019-03-06
 
 # Elixir installation -->
 RUN apk --update add --virtual build-dependencies wget ca-certificates && \
@@ -29,7 +29,8 @@ RUN mix local.hex --force && \
 ENV HOME /root
 
 # Upgrade all packages and install needed packages
-RUN apk add --update docker nodejs && \
+RUN apk add --update docker nodejs npm && \
+  npm config set registry http://registry.npmjs.org/ && \
   npm install -g brunch && \
   rm -rf /var/cache/apk/*
 

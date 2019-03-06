@@ -1,29 +1,25 @@
 # A list of databases to connect to
-databases:
-  main:
-    host: localhost
-    port: 7654
-    user: lifelife
-    password: lifelife
-    database: lifelife
+database:
+  host: localhost
+  port: 7654
+  user: lifelife
+  password: lifelife
+  database: lifelife
 
 # Which tables to listen for and how to report on changes
 listen:
   general_properties_change:
-    database: main
     table: properties
     payload:
       id: id
       human_id: human_id
 
   property_change_via_images:
-    database: main
     table: property_images
     payload:
       id: property_id
 
   property_change_via_events:
-    database: main
     table: property_events
     payload:
       id: property_id

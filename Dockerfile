@@ -1,7 +1,7 @@
-FROM alpine:3.4
+FROM alpine:3.8
 MAINTAINER Lauri Kainulainen <lauri.kainulainen@gmail.com>
 
-RUN apk --update add ncurses-libs && rm -rf /var/cache/apk/*
+RUN apk --update add ncurses-libs libcrypto1.0 && rm -rf /var/cache/apk/*
 
 COPY _build /_build
 
