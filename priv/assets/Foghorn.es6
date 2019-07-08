@@ -1,5 +1,5 @@
 const Foghorn = (function() {
-  const _version = "2.3.1"
+  const _version = "2.4.2"
   const pingInterval = 30000
   let ret = {}
   let websocket = null
@@ -8,6 +8,7 @@ const Foghorn = (function() {
   let lastConnection = -1
   let failedConnections = 0
   let pingIntervalId = null
+  let connectionChangeListener = null
 
   const log = function() {
     log.history = log.history || []
@@ -17,13 +18,29 @@ const Foghorn = (function() {
     }
   }
 
+  /** Set this before any operations to the correct backend address */
   ret.ADDRESS = 'ws://localhost:5555/ws'
 
-  ret.listen = function(directives, cb, connectedCallback) {
+  /**
+   * Set a global change listener that allows for listening on the state of the websocket connection. E.g. to show a
+   * connection notification.
+   * @param globalConnectionChangeListener function that is called with (connected (bool), failedAttempts (int))
+   */
+  ret.onConnectionChange = function(globalConnectionChangeListener) {
+    connectionChangeListener = globalConnectionChangeListener
+  }
+
+  /** Main entry point. Set the directives you want to listen to defined by your YAML config and the callback that
+   * should be called when changes occur.
+   * @param directives an array of directive names (strings)
+   * @param cb a function that is called with the (directive, operation, payload) once triggered
+   * @return the request ID for this particular request
+   */
+  ret.listen = function(directives, cb) {
     log('FOGHORN.listen: called for', directives)
+    const reqId = new Date().getTime()
     ensureConnected(function() {
       log('FOGHORN: new callback for directive', directives)
-      let reqId = new Date().getTime()
       if(typeof directives === "string") {
         directives = [directives]
       }
@@ -32,8 +49,12 @@ const Foghorn = (function() {
       })
       websocket.send(JSON.stringify({op: 'LISTEN', directives: directives, request_id: reqId, client_id: currentClientId}))
     })
+    return reqId
   }
 
+  /**
+   * Stops all listening, clears listeners.
+   */
   ret.unlisten = function() {
     ensureConnected(function() {
       log('FOGHORN.unlisten')
@@ -42,6 +63,10 @@ const Foghorn = (function() {
     })
   }
 
+  /**
+   * Check Foghorn is connected
+   * @return boolean. True if connected, false otherwise
+   */
   ret.connected = function() {
     return connected()
   }
@@ -92,6 +117,7 @@ const Foghorn = (function() {
       websocket.close()
       clearInterval(pingIntervalId)
       pingIntervalId = null
+      connectionChangeListener(false, failedConnections)
     }
   }
 
@@ -111,7 +137,6 @@ const Foghorn = (function() {
   }
 
   function connect() {
-
     if(websocket) {
       if(websocket.readyState === WebSocket.CONNECTING || websocket.readyState === WebSocket.OPEN) {
         return true
@@ -123,7 +148,8 @@ const Foghorn = (function() {
       websocket = new WebSocket(ret.ADDRESS)
     } else {
       if(failedConnections === 10) {
-        log('FOGHORN: more than 10 failed connection attempts, giving up')
+        log('FOGHORN: more than 10 subsequent failed connection attempts. Giving up')
+        connectionChangeListener(false, failedConnections)
       }
       return false
     }
@@ -131,6 +157,7 @@ const Foghorn = (function() {
     websocket.onopen = function(evt) {
       log('FOGHORN: +++ on open', evt)
       lastConnection = new Date().getTime()
+      connectionChangeListener(true, failedConnections)
       failedConnections = 0
       // Is this a reconnect of a previous listening session? If so, then reconnect to get the same notifications
       if(currentClientId) {
@@ -145,6 +172,7 @@ const Foghorn = (function() {
       // delay a bit between subsequent failed connections
       setTimeout(() => connect(), failedConnections * 2000)
     }
+
     websocket.onmessage = function(evt) {
       log('FOGHORN websocket.onmessage:', evt, this)
       lastConnection = new Date().getTime()
@@ -153,6 +181,7 @@ const Foghorn = (function() {
         notify(payload)
       }
     }
+
     websocket.onerror = function(evt) {
       failedConnections += 1
       log('FOGHORN websocket.onerror: failed connections', failedConnections, evt)
@@ -162,6 +191,7 @@ const Foghorn = (function() {
       log('FOGHORN: set up pinging')
       pingIntervalId = setInterval(ping, pingInterval)
     }
+
     return websocket
   }
 
