@@ -26,7 +26,7 @@ defmodule Triggers do
     if pg_connection do
       case Postgrex.query(pg_connection, query, []) do
         {:ok, _} -> IO.puts "    -> created trigger"
-        {:error, %{"postgres": %{"code": :duplicate_object}}} ->
+        {:error, %{postgres: %{code: :duplicate_object}}} ->
           IO.puts "    -> trigger already exists"
         {:error, reason} ->
           IO.puts "    !!!! Could not create trigger:"

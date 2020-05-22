@@ -5,7 +5,7 @@ defmodule Foghorn.Mixfile do
     [
       app: :foghorn,
       version: "2.4.2",
-      elixir: "~> 1.6.5",
+      elixir: "> 1.6.5",
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
       deps: deps(),
@@ -13,9 +13,6 @@ defmodule Foghorn.Mixfile do
     ]
   end
 
-  # Configuration for the OTP application
-  #
-  # Type "mix help compile.app" for more information
   def application do
     [
       applications: [
@@ -30,22 +27,12 @@ defmodule Foghorn.Mixfile do
     ]
   end
 
-  # Dependencies can be Hex packages:
-  #
-  #   {:mydep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:mydep, git: "https://github.com/elixir-lang/mydep.git", tag: "0.1.0"}
-  #
-  # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:cowboy, "1.0.0" },
-      {:postgrex, "~> 0.14.1"},
-      {:poison, "~> 2.0"},
-      {:distillery, "~> 1.4.1", runtime: false},
-      {:yaml_elixir, "~> 1.3.1"},
+      {:cowboy, "2.7.0" },
+      {:postgrex, "~> 0.15.4"},
+      {:poison, "~> 4.0"},
+      {:yaml_elixir, "~> 2.4.0"},
       {:socket, "~> 0.3", runtime: false},
     ]
   end

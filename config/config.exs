@@ -2,6 +2,21 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
+debug_level = case String.downcase(System.get_env("FOGHORN_DEBUG", "false")) do
+  "false" -> :info
+  "0" -> :info
+  "true" -> :debug
+  "1" -> :debug
+end
+
+config :logger,
+  backends: [:console],
+  level: debug_level
+
+  # compile_time_purge_matching: [
+  #   [level_lower_than: :info]
+  # ]
+
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
 # file won't be loaded nor affect the parent project. For this reason,
@@ -19,13 +34,6 @@ use Mix.Config
 # Or configure a 3rd-party app:
 #
 #     config :logger, level: :info
-
-#config :foghorn, pg_conf: [
-#  hostname: "192.168.99.100",
-#  port: 5432,
-#  username: "postgres",
-#  password: "postboy",
-#  database: "postgres" ]
 
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment

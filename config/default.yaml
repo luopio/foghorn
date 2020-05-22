@@ -1,10 +1,10 @@
 # A list of databases to connect to
 database:
   host: localhost
-  port: 7654
-  user: lifelife
-  password: lifelife
-  database: lifelife
+  port: 5432
+  user: foo
+  password: foo
+  database: foo
 
 # Which tables to listen for and how to report on changes
 listen:
