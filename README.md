@@ -9,7 +9,7 @@ Watches your Postgres database for changes (using NOTIFY) and notifies listening
 The easiest option. No local [Elixir](http://elixir-lang.org/) installation required, but you will need [Docker](https://www.docker.com/products/overview).
 
 ```
-docker run -ti -v configfile.yaml:/config.yaml -p 5555:5555 --rm luopio/foghorn:latest foreground
+docker run -ti -v configfile.yaml:/config.yaml -p 5555:5555 --rm luopio/foghorn:latest start
 ```
 
 ### Run directly with Elixir
