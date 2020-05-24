@@ -1,4 +1,5 @@
-defmodule FoghornTest do
+defmodule IsolationTest do
+
   use ExUnit.Case
   doctest Foghorn
 

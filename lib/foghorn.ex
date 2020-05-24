@@ -22,6 +22,23 @@ defmodule Foghorn do
 
   def init(_) do
     Logger.debug("Foghorn.init()")
+    [app_conf, pg_conf_list] = find_configuration()
+    :ok = Triggers.add_triggers(%{pg_conf: pg_conf_list, app_conf: app_conf})
+
+    {:ok, _} =
+      Notifications.start_link(%{pg_conf: pg_conf_list, channel: @channel}, name: :notifications)
+
+    {:ok, _} = Clients.start_link(%{app_conf: app_conf}, [])
+    {:ok, _} = HTTPServer.start()
+    {:ok, %{pg_conf: pg_conf_list, app_conf: app_conf}}
+  end
+
+  def terminate(_reason, state) do
+    Logger.info("Foghorn.terminate()")
+    Triggers.remove_all_foghorn_triggers(state)
+  end
+
+  def find_configuration() do
     app_conf = read_conf_from_yaml()
     pg_conf = extract_postgres_connection_config(app_conf)
     pg_conf_env = read_pg_conf_from_env()
@@ -36,19 +53,7 @@ defmodule Foghorn do
     pg_conf_list = Map.to_list(pg_conf)
     Logger.debug("Postgres configuration")
     Logger.debug(pg_conf_list)
-    :ok = Triggers.add_triggers(%{pg_conf: pg_conf_list, app_conf: app_conf})
-
-    {:ok, _} =
-      Notifications.start_link(%{pg_conf: pg_conf_list, channel: @channel}, name: :notifications)
-
-    {:ok, _} = Clients.start_link(%{app_conf: app_conf}, [])
-    {:ok, _} = HTTPServer.start()
-    {:ok, %{pg_conf: pg_conf_list, app_conf: app_conf}}
-  end
-
-  def terminate(_reason, state) do
-    Logger.info("Foghorn.terminate()")
-    Triggers.remove_all_foghorn_triggers(state)
+    [app_conf, pg_conf_list]
   end
 
   #######################

@@ -1,0 +1,13 @@
+database:
+  host: localhost
+  port: 7654
+  user: postgres
+  password: postgres
+  database: postgres
+
+listen:
+  test_simple_changes:
+    table: foghorn_test_messages
+    payload:
+      id: id
+      msg: message

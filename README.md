@@ -1,6 +1,6 @@
 # Foghorn
 
-Watches your database for changes and notifies listening clients through websockets.
+Watches your Postgres database for changes (using NOTIFY) and notifies listening clients through websockets (using Cowboy).
 
 ## Installation
 
@@ -47,16 +47,20 @@ listen:
     table: post_comments
     # here clients will receive a payload of {id: <post_id>}
     payload:
-      id: post_id  
+      id: post_id
 
 ```
 
 You can override the database connection with an environment variable. This will take precedence over the config
-file: 
+file:
 
 ```bash
 FOGHORN_DB=postgres://user:pass@host:post/database FOGHORN_CONFIG="/path/to/config.yaml" mix run --no-halt
 ```
+
+### Debugging
+
+Set `FOGHORN_DEBUG=1` to receive debug level messages in console.
 
 ## Client javascript
 
@@ -78,14 +82,23 @@ application and use it like so:
     });
 ```
 
-## Supported databases
-
-Postgres (via NOTIFY).
-
 ## Test it
 
 Open up a browser on [localhost:5555](localhost:5555). If you used Docker and/or Docker-machine
 the host might be different.
+
+## Running tests
+
+Tests that work in isolation (no external database required):
+```
+$ FOGHORN_CONFIG=$(pwd)/test/test_isolation.yaml FOGHORN_DEBUG=1 mix test test/isolation_test.exs
+```
+
+Tests that do the whole roundtrip to the database and back:
+```
+$ FOGHORN_CONFIG=$(pwd)/test/test_postgres.yaml FOGHORN_DEBUG=1 mix test test/postgres_test.exs
+```
+
 
 ## Compiling the Javascript code
 
@@ -97,26 +110,6 @@ npm install
 ./compile_javascript.sh
 ```
 
-## How to build the Docker container
-
-On Mac OS X you'll need a separate image for building linux-compatible Elixir releases. On linux you can just run `compile_release.sh`.
-
-Use the build-image to build an image that you can use for one-off compilations (cross-compile). Only needed on Mac. Only needed once.
-```
-docker build -t elixir-builder -f Dockerfile.build .
-```
-
-Build the release within the docker container
-```
-docker run -ti --rm -v $(pwd):/build elixir-builder /build/compile_release.sh
-```
-
-Build the final container that contains your new release which you can then run independently
-```
-docker build -t luopio/foghorn:2.0 .
-```
-
-
 ## Things to do maybe
 
 - Proper supervision tree
@@ -124,6 +117,7 @@ docker build -t luopio/foghorn:2.0 .
 - Publish to Hex
 - Multiple simultaneous databases -support
 - Other databases? (PRs welcome)
+- `mix test` to run all tests (set configuration on the fly)
 
 
 License: MIT
