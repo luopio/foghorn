@@ -109,7 +109,7 @@ const Foghorn = (function() {
   }
 
   function connected() {
-    return websocket.readyState === WebSocket.OPEN
+    return websocket && websocket.readyState === WebSocket.OPEN
   }
 
   function disconnect() {
