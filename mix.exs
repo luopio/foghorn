@@ -5,7 +5,7 @@ defmodule Foghorn.Mixfile do
     [
       app: :foghorn,
       version: "2.6.0",
-      elixir: "> 1.6.5",
+      elixir: "~> 1.10",
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
       deps: deps(),
